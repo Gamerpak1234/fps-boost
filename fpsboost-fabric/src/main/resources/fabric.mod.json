@@ -3,7 +3,7 @@
   "id": "fpsboost",
   "version": "${version}",
   "name": "FPS Boost",
-  "description": "Raises the game's OS process priority and offers a one-key performance mode to reduce render load.",
+  "description": "Raises the game's OS process priority for better performance.",
   "authors": [
     "you"
   ],
@@ -13,16 +13,12 @@
   "entrypoints": {
     "main": [
       "com.fpsboost.FpsBoostMod"
-    ],
-    "client": [
-      "com.fpsboost.FpsBoostClient"
     ]
   },
   "mixins": [],
   "depends": {
     "fabricloader": ">=0.16.14",
     "minecraft": "~1.21.11",
-    "java": ">=21",
-    "fabric-api": "*"
+    "java": ">=21"
   }
 }
