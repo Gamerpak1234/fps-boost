@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: fpsboost-fabric
+        working-directory: fpsboost-fabric-mod/fpsboost-fabric
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fpsboost-jar
-          path: fpsboost-fabric/build/libs/*.jar
+          path: fpsboost-fabric-mod/fpsboost-fabric/build/libs/*.jar
