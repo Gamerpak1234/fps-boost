@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: fpsboost-fabric-mod/fpsboost-fabric
+        working-directory: fpsboost-fabric
     steps:
       - name: Check out code
         uses: actions/checkout@v4
