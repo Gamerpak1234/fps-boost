@@ -38,9 +38,15 @@ java {
     withSourcesJar()
 }
 
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release = 21
+}
+
 // TEMPORARY diagnostic task: prints the real, current method signatures of
-// GameOptions from the actual remapped Minecraft jar, so we stop guessing
-// method names. Run with: gradle dumpGameOptionsApi
+// GameOptions from the actual remapped Minecraft jar using plain Java
+// reflection (no external process), so we stop guessing method names.
+// Run with: gradle dumpGameOptionsApi
 tasks.register('dumpGameOptionsApi') {
     doLast {
         def cp = configurations.getByName('compileClasspath')
@@ -66,18 +72,17 @@ tasks.register('dumpGameOptionsApi') {
             println "GameOptions.class not found at expected path inside jar."
             return
         }
-        def out = new ByteArrayOutputStream()
-        exec {
-            commandLine 'javap', '-p', '-s', classFile.absolutePath
-            standardOutput = out
-        }
-        println "===== GameOptions method signatures ====="
-        println out.toString()
+        def loader = new URLClassLoader([tmpDir.toURI().toURL()] as URL[], this.class.classLoader)
+        def clazz = loader.loadClass("net.minecraft.client.option.GameOptions")
+
+        def keywords = ['particle', 'graphic', 'cloud', 'view', 'distance', 'shadow']
+        println "===== Matching GameOptions methods ====="
+        clazz.declaredMethods
+            .findAll { m -> keywords.any { m.name.toLowerCase().contains(it) } }
+            .sort { it.name }
+            .each { m ->
+                println "${java.lang.reflect.Modifier.toString(m.modifiers)} ${m.genericReturnType} ${m.name}(${m.genericParameterTypes.join(', ')})"
+            }
+        println "===== End ====="
     }
 }
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    it.options.release = 21
-}
-
