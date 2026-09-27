@@ -42,39 +42,3 @@ tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
     it.options.release = 21
 }
-
-// TEMPORARY diagnostic task: prints the real, current method signatures of
-// GameOptions from the actual remapped Minecraft jar using plain Java
-// reflection (loading straight from the jar, no extraction needed), so we
-// stop guessing method names.
-// Run with: gradle dumpGameOptionsApi
-tasks.register('dumpGameOptionsApi') {
-    doLast {
-        def cp = configurations.getByName('compileClasspath')
-        def target = cp.files.find {
-            it.name.toLowerCase().contains('minecraft') && !it.name.toLowerCase().contains('sources')
-        }
-        if (target == null) {
-            println "No minecraft jar found. Classpath entries:"
-            cp.files.each { println " - ${it.name}" }
-            return
-        }
-        println "Using jar: ${target}"
-        // Load with the FULL compile classpath (not just the one jar) so
-        // every class GameOptions references (Brigadier, Minecraft's own
-        // other classes, etc.) can actually be resolved.
-        def urls = cp.files.collect { it.toURI().toURL() } as URL[]
-        def loader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().parent)
-        def clazz = loader.loadClass("net.minecraft.client.option.GameOptions")
-
-        def keywords = ['particle', 'graphic', 'cloud', 'view', 'distance', 'shadow']
-        println "===== Matching GameOptions methods ====="
-        clazz.declaredMethods
-            .findAll { m -> keywords.any { m.name.toLowerCase().contains(it) } }
-            .sort { it.name }
-            .each { m ->
-                println "${java.lang.reflect.Modifier.toString(m.modifiers)} ${m.genericReturnType} ${m.name}(${m.genericParameterTypes.join(', ')})"
-            }
-        println "===== End ====="
-    }
-}
