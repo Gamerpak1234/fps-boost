@@ -38,6 +38,44 @@ java {
     withSourcesJar()
 }
 
+// TEMPORARY diagnostic task: prints the real, current method signatures of
+// GameOptions from the actual remapped Minecraft jar, so we stop guessing
+// method names. Run with: gradle dumpGameOptionsApi
+tasks.register('dumpGameOptionsApi') {
+    doLast {
+        def cp = configurations.getByName('compileClasspath')
+        def target = cp.files.find {
+            it.name.toLowerCase().contains('minecraft') && !it.name.toLowerCase().contains('sources')
+        }
+        if (target == null) {
+            println "No minecraft jar found. Classpath entries:"
+            cp.files.each { println " - ${it.name}" }
+            return
+        }
+        println "Using jar: ${target}"
+        def tmpDir = new File(project.buildDir, "gameoptions-dump")
+        tmpDir.deleteDir()
+        tmpDir.mkdirs()
+        ant.unzip(src: target, dest: tmpDir, overwrite: true) {
+            patternset {
+                include(name: "net/minecraft/client/option/GameOptions.class")
+            }
+        }
+        def classFile = new File(tmpDir, "net/minecraft/client/option/GameOptions.class")
+        if (!classFile.exists()) {
+            println "GameOptions.class not found at expected path inside jar."
+            return
+        }
+        def out = new ByteArrayOutputStream()
+        exec {
+            commandLine 'javap', '-p', '-s', classFile.absolutePath
+            standardOutput = out
+        }
+        println "===== GameOptions method signatures ====="
+        println out.toString()
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
     it.options.release = 21
