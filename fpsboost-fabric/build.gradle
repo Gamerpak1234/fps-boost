@@ -60,7 +60,11 @@ tasks.register('dumpGameOptionsApi') {
             return
         }
         println "Using jar: ${target}"
-        def loader = new URLClassLoader([target.toURI().toURL()] as URL[], this.class.classLoader)
+        // Load with the FULL compile classpath (not just the one jar) so
+        // every class GameOptions references (Brigadier, Minecraft's own
+        // other classes, etc.) can actually be resolved.
+        def urls = cp.files.collect { it.toURI().toURL() } as URL[]
+        def loader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().parent)
         def clazz = loader.loadClass("net.minecraft.client.option.GameOptions")
 
         def keywords = ['particle', 'graphic', 'cloud', 'view', 'distance', 'shadow']
